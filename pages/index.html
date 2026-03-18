@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automata Simulator — DFA & NFA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020a13;
+            --primary: #00ffd5;
+            --primary-glow: rgba(0, 255, 213, 0.35);
+            --nfa-accent: #ff2d55;
+            --nfa-glow: rgba(255, 45, 85, 0.35);
+            --text-primary: #d0e8e4;
+            --text-secondary: #5a8a82;
+            --border-glow: rgba(0, 255, 213, 0.1);
+            --surface: rgba(3, 18, 30, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Chakra Petch', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Blueprint grid — layered major + minor gridlines */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 213, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 213, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 213, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 213, 0.015) 1px, transparent 1px);
+            background-size: 200px 200px, 200px 200px, 40px 40px, 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Scanline overlay */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.025) 2px,
+                rgba(0, 0, 0, 0.025) 4px
+            );
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Ambient glow — subtle, structural  */
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .glow-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 255, 213, 0.12) 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            animation: glowDrift 12s ease-in-out infinite alternate;
+        }
+
+        .glow-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 45, 85, 0.08) 0%, transparent 70%);
+            bottom: -150px;
+            right: -100px;
+            animation: glowDrift 15s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes glowDrift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, -30px); }
+        }
+
+        /* Layout */
+        .landing {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 70px;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 18px;
+            background: rgba(0, 255, 213, 0.06);
+            border: 1px solid rgba(0, 255, 213, 0.15);
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .hero-badge::before {
+            content: "//";
+            opacity: 0.4;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            margin-bottom: 18px;
+            color: var(--primary);
+            text-shadow: 0 0 60px var(--primary-glow), 0 0 120px rgba(0, 255, 213, 0.1);
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.5em;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-shadow: none;
+            margin-top: 6px;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 460px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        /* Cards grid */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 820px;
+            width: 100%;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s backwards;
+        }
+
+        .card {
+            position: relative;
+            background: var(--surface);
+            backdrop-filter: blur(24px) saturate(1.3);
+            -webkit-backdrop-filter: blur(24px) saturate(1.3);
+            border: 1px solid var(--border-glow);
+            border-radius: 3px;
+            padding: 36px 30px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow: hidden;
+            cursor: pointer;
+            clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+        }
+
+        /* Top edge glow line */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transition: height 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-dfa::before {
+            background: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .card-nfa::before {
+            background: var(--nfa-accent);
+            box-shadow: 0 0 20px var(--nfa-glow);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 255, 213, 0.2);
+        }
+
+        .card:hover::before {
+            height: 3px;
+        }
+
+        .card-dfa:hover {
+            box-shadow: 0 16px 60px rgba(0, 255, 213, 0.08), 0 0 30px rgba(0, 255, 213, 0.04);
+        }
+
+        .card-nfa:hover {
+            box-shadow: 0 16px 60px rgba(255, 45, 85, 0.08), 0 0 30px rgba(255, 45, 85, 0.04);
+        }
+
+        /* Card type indicator */
+        .card-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-type::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 1px;
+            display: inline-block;
+        }
+
+        .card-dfa .card-type {
+            color: var(--primary);
+        }
+
+        .card-dfa .card-type::before {
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .card-nfa .card-type {
+            color: var(--nfa-accent);
+        }
+
+        .card-nfa .card-type::before {
+            background: var(--nfa-accent);
+            box-shadow: 0 0 8px var(--nfa-glow);
+        }
+
+        .card h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
+            text-transform: none;
+            text-shadow: none;
+        }
+
+        .card-dfa h2 {
+            color: var(--text-primary);
+        }
+
+        .card-nfa h2 {
+            color: var(--text-primary);
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 22px;
+            font-weight: 400;
+        }
+
+        .card-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 28px;
+        }
+
+        .card-features li {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.02em;
+        }
+
+        .card-features li::before {
+            content: "►";
+            font-size: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-dfa .card-features li::before {
+            color: var(--primary);
+        }
+
+        .card-nfa .card-features li::before {
+            color: var(--nfa-accent);
+        }
+
+        .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: gap 0.2s ease;
+        }
+
+        .card-dfa .card-cta {
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .card-nfa .card-cta {
+            color: var(--nfa-accent);
+            text-shadow: 0 0 12px var(--nfa-glow);
+        }
+
+        .card:hover .card-cta {
+            gap: 16px;
+        }
+
+        .card-cta .arrow {
+            font-family: 'JetBrains Mono', monospace;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover .card-cta .arrow {
+            transform: translateX(4px);
+        }
+
+        /* Decorative separator */
+        .divider {
+            width: 100%;
+            max-width: 820px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 213, 0.15), transparent);
+            margin: 50px 0 24px;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s backwards;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
+        }
+
+        .footer p {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            opacity: 0.5;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* Coordinate markers — decorative corner marks */
+        .coord-mark {
+            position: fixed;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: rgba(0, 255, 213, 0.15);
+            letter-spacing: 0.1em;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .coord-tl { top: 16px; left: 16px; }
+        .coord-tr { top: 16px; right: 16px; }
+        .coord-bl { bottom: 16px; left: 16px; }
+        .coord-br { bottom: 16px; right: 16px; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 28px 22px;
+            }
+
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+        }
+
+        /* Selection */
+        ::selection {
+            background: rgba(0, 255, 213, 0.25);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient glow -->
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <!-- Decorative coordinate marks -->
+    <div class="coord-mark coord-tl">0,0</div>
+    <div class="coord-mark coord-tr">1920,0</div>
+    <div class="coord-mark coord-bl">0,1080</div>
+    <div class="coord-mark coord-br">1920,1080</div>
+
+    <div class="landing">
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="hero-badge">Interactive Visualizer</div>
+            <h1>AUTOMATA<span>Design &middot; Visualize &middot; Simulate</span></h1>
+            <p>Build finite automata with freehand transitions, then run step-by-step simulations to test acceptance.</p>
+        </header>
+
+        <!-- Simulator Cards -->
+        <div class="cards">
+            <a href="dfa.html" class="card card-dfa">
+                <div class="card-type">DFA Module</div>
+                <h2>Deterministic Finite Automaton</h2>
+                <p>Exactly one transition per input symbol from each state. Predictable, single-path execution.</p>
+                <ul class="card-features">
+                    <li>Single active state at any time</li>
+                    <li>One transition per symbol per state</li>
+                    <li>Duplicate transition warnings</li>
+                    <li>Step-by-step visual simulation</li>
+                </ul>
+                <div class="card-cta">
+                    Launch DFA <span class="arrow">→</span>
+                </div>
+            </a>
+
+            <a href="nfa.html" class="card card-nfa">
+                <div class="card-type">NFA Module</div>
+                <h2>Non-Deterministic Finite Automaton</h2>
+                <p>Multiple simultaneous transitions and epsilon moves. Explores all possible computation paths.</p>
+                <ul class="card-features">
+                    <li>Multiple active states simultaneously</li>
+                    <li>Epsilon (ε) transition support</li>
+                    <li>Multiple start states allowed</li>
+                    <li>Active state set visualization</li>
+                </ul>
+                <div class="card-cta">
+                    Launch NFA <span class="arrow">→</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Divider + Footer -->
+        <div class="divider"></div>
+        <footer class="footer">
+            <p>TAFL Assignment &mdash; Finite Automata Visualization Tool</p>
+        </footer>
+    </div>
+</body>
+
+</html>
