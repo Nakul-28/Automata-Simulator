@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/pages/index.html"
+    },
+    {
+      "source": "/dfa.html",
+      "destination": "/pages/dfa.html"
+    },
+    {
+      "source": "/nfa.html",
+      "destination": "/pages/nfa.html"
+    }
+  ]
+}
