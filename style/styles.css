@@ -203,7 +203,7 @@ svg#automata-canvas {
     bottom: 20px;
     left: 320px;
     right: 20px;
-    height: 120px;
+    height: 172px;
     border-radius: 4px;
     padding: 16px 24px;
     display: flex;
@@ -459,6 +459,64 @@ html[data-theme="dark"] .info-box {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.sim-input-section {
+    flex: 1;
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.examples-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.examples-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.example-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.example-btn {
+    border: 1px dashed var(--border-glow);
+    background: #fbfbfb;
+    color: var(--text-primary);
+    padding: 5px 9px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+html[data-theme="dark"] .example-btn {
+    background: #0e0e0e;
+}
+
+.example-btn:hover {
+    border-style: solid;
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #efefef;
+}
+
+html[data-theme="dark"] .example-btn:hover {
+    background: #191919;
 }
 
 .input-group label {
@@ -941,6 +999,10 @@ html[data-theme="dark"] .nav-tab.active {
 .epsilon-transition .transition-path {
     stroke-dasharray: 6, 4;
     stroke: rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .epsilon-transition .transition-path {
+    stroke: rgba(235, 235, 235, 0.9);
 }
 
 .epsilon-transition .transition-text {

@@ -115,9 +115,18 @@
         <!-- Simulation Bottom Panel -->
         <footer class="bottom-panel sim-panel glass">
             <div class="sim-controls">
-                <div class="input-group">
-                    <label for="sim-input">Input String:</label>
-                    <input type="text" id="sim-input" placeholder="e.g. 1011">
+                <div class="sim-input-section">
+                    <div class="input-group">
+                        <label for="sim-input">Input String:</label>
+                        <input type="text" id="sim-input" placeholder="e.g. 1011">
+                    </div>
+                    <div class="examples-group">
+                        <div class="examples-title">Examples:</div>
+                        <div class="example-list" id="example-list-nfa">
+                            <button class="example-btn" data-example-id="nfa-contains-ab">Contains substring ab</button>
+                            <button class="example-btn" data-example-id="nfa-epsilon-ab-star">(ab)* using ε-transition</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="playback-controls">

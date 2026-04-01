@@ -586,6 +586,64 @@ document.addEventListener('DOMContentLoaded', () => {
         resultBadge: document.getElementById('sim-result')
     };
 
+    const nfaExamples = {
+        'nfa-contains-ab': {
+            title: 'Contains substring ab',
+            input: 'aaab',
+            nodes: [
+                { id: 'q0', label: 'q0', x: 200, y: 220, isStart: true, isAccept: false },
+                { id: 'q1', label: 'q1', x: 420, y: 130, isStart: false, isAccept: false },
+                { id: 'q2', label: 'q2', x: 420, y: 310, isStart: false, isAccept: true }
+            ],
+            edges: [
+                { id: 'e0', from: 'q0', to: 'q0', symbols: ['a', 'b'], cpX: null, cpY: null },
+                { id: 'e1', from: 'q0', to: 'q1', symbols: ['a'], cpX: null, cpY: null },
+                { id: 'e2', from: 'q1', to: 'q2', symbols: ['b'], cpX: null, cpY: null },
+                { id: 'e3', from: 'q2', to: 'q2', symbols: ['a', 'b'], cpX: null, cpY: null }
+            ]
+        },
+        'nfa-epsilon-ab-star': {
+            title: '(ab)* using epsilon-transition',
+            input: 'abab',
+            nodes: [
+                { id: 'q0', label: 'q0', x: 220, y: 220, isStart: true, isAccept: true },
+                { id: 'q1', label: 'q1', x: 440, y: 140, isStart: false, isAccept: false },
+                { id: 'q2', label: 'q2', x: 440, y: 300, isStart: false, isAccept: false }
+            ],
+            edges: [
+                { id: 'e0', from: 'q0', to: 'q1', symbols: ['ε'], cpX: null, cpY: null },
+                { id: 'e1', from: 'q1', to: 'q2', symbols: ['a'], cpX: null, cpY: null },
+                { id: 'e2', from: 'q2', to: 'q0', symbols: ['b'], cpX: null, cpY: null }
+            ]
+        }
+    };
+
+    function nextCounter(items, prefix) {
+        let max = -1;
+        items.forEach(item => {
+            const raw = String(item.id || '');
+            const num = parseInt(raw.replace(prefix, ''), 10);
+            if (Number.isFinite(num)) max = Math.max(max, num);
+        });
+        return max + 1;
+    }
+
+    function loadNfaExample(exampleId) {
+        const example = nfaExamples[exampleId];
+        if (!example) return;
+
+        saveSnapshot();
+        appState.nodes = JSON.parse(JSON.stringify(example.nodes));
+        appState.edges = JSON.parse(JSON.stringify(example.edges));
+        appState.nodeCounter = nextCounter(appState.nodes, 'q');
+        appState.edgeCounter = nextCounter(appState.edges, 'e');
+        uiControls.input.value = example.input;
+
+        deselectAll();
+        resetSim();
+        document.getElementById('status-message').textContent = `Loaded example: ${example.title}`;
+    }
+
     // NFA: Epsilon closure is a core concept
     function getEpsilonClosure(stateIds) {
         const closure = new Set(stateIds);
@@ -779,6 +837,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const initialSpeed = 2100 - parseInt(uiControls.speedSlider.value);
             appState.sim.intervalId = setTimeout(playStep, initialSpeed);
         }
+    });
+
+    document.querySelectorAll('.example-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            loadNfaExample(btn.getAttribute('data-example-id'));
+        });
     });
 
     // Patch updateRender to handle active visual states

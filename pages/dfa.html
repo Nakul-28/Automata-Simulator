@@ -120,9 +120,18 @@
         <!-- Simulation Bottom Panel -->
         <footer class="bottom-panel sim-panel glass">
             <div class="sim-controls">
-                <div class="input-group">
-                    <label for="sim-input">Input String:</label>
-                    <input type="text" id="sim-input" placeholder="e.g. 1011">
+                <div class="sim-input-section">
+                    <div class="input-group">
+                        <label for="sim-input">Input String:</label>
+                        <input type="text" id="sim-input" placeholder="e.g. 1011">
+                    </div>
+                    <div class="examples-group">
+                        <div class="examples-title">Examples:</div>
+                        <div class="example-list" id="example-list-dfa">
+                            <button class="example-btn" data-example-id="dfa-ends-with-01">Ends with 01</button>
+                            <button class="example-btn" data-example-id="dfa-even-ones">Even number of 1s</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="playback-controls">
