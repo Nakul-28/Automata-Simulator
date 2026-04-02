@@ -735,10 +735,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(closure);
     }
 
+    function buildInputTape(rawInput) {
+        const normalized = (rawInput || '').trim();
+        if (!normalized) return [];
+
+        // Accept common epsilon notations as empty string input.
+        const epsilonTokens = new Set(['ε', 'epsilon', 'lambda', 'λ', 'empty']);
+        if (epsilonTokens.has(normalized.toLowerCase())) {
+            return [];
+        }
+
+        return normalized.split('');
+    }
+
     function resetSim() {
         clearTimeout(appState.sim.intervalId);
-        const inputStr = uiControls.input.value.trim();
-        appState.sim.tape = inputStr.split('');
+        appState.sim.tape = buildInputTape(uiControls.input.value);
         appState.sim.head = 0;
         appState.sim.status = 'idle';
         uiControls.btnPlay.textContent = '▶️ Play';
@@ -765,6 +777,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateRender(); // will render active states 
         document.querySelectorAll('g.transition.active-edge-sim').forEach(el => el.classList.remove('active-edge-sim'));
+
+        // Empty input is accepted iff an accepting state is reachable at start.
+        if (appState.sim.tape.length === 0) {
+            checkAcceptance();
+        }
     }
 
     function stepSim() {
@@ -831,6 +848,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkAcceptance() {
+        // For empty input, always derive active states from current automaton state
+        // so acceptance stays correct after editing start/accept flags.
+        if (appState.sim.head === 0 && appState.sim.tape.length === 0) {
+            const startNodes = appState.nodes.filter(n => n.isStart).map(n => n.id);
+            appState.sim.activeStates = startNodes.length > 0
+                ? getEpsilonClosure(startNodes)
+                : [];
+        }
+
         const hasAccepting = appState.sim.activeStates.some(id => {
             const node = appState.nodes.find(n => n.id === id);
             return node && node.isAccept;
@@ -874,6 +900,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (appState.sim.status === 'accepted' || appState.sim.status === 'rejected') {
                 resetSim();
+            }
+
+            // Evaluate empty string immediately (no playback loop needed).
+            if (appState.sim.tape.length === 0) {
+                checkAcceptance();
+                return;
             }
 
             appState.sim.status = 'playing';
@@ -1065,6 +1097,63 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     }
 
+    function normalizeImportedBidirectionalEdges() {
+        const byPair = new Map();
+
+        appState.edges.forEach(edge => {
+            if (edge.from === edge.to) return;
+            const key = [edge.from, edge.to].sort().join('|');
+            if (!byPair.has(key)) byPair.set(key, []);
+            byPair.get(key).push(edge);
+        });
+
+        byPair.forEach(pairEdges => {
+            const [idA, idB] = pairEdges[0].from < pairEdges[0].to
+                ? [pairEdges[0].from, pairEdges[0].to]
+                : [pairEdges[0].to, pairEdges[0].from];
+            const nodeA = appState.nodes.find(n => n.id === idA);
+            const nodeB = appState.nodes.find(n => n.id === idB);
+            if (!nodeA || !nodeB) return;
+
+            const baseDx = nodeB.x - nodeA.x;
+            const baseDy = nodeB.y - nodeA.y;
+            const baseDist = Math.hypot(baseDx, baseDy);
+            if (baseDist === 0) return;
+
+            const pairNx = -baseDy / baseDist;
+            const pairNy = baseDx / baseDist;
+            const pairMidX = (nodeA.x + nodeB.x) / 2;
+            const pairMidY = (nodeA.y + nodeB.y) / 2;
+
+            const directionGroups = new Map();
+            pairEdges.forEach(edge => {
+                const dirKey = `${edge.from}->${edge.to}`;
+                if (!directionGroups.has(dirKey)) directionGroups.set(dirKey, []);
+                directionGroups.get(dirKey).push(edge);
+            });
+
+            const directions = Array.from(directionGroups.keys()).sort();
+            if (directions.length < 2) return;
+
+            const plusDirection = `${idA}->${idB}`;
+
+            directions.forEach(dirKey => {
+                const sign = dirKey === plusDirection ? 1 : -1;
+                const dirEdges = directionGroups.get(dirKey).slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+                dirEdges.forEach((edge, idx) => {
+                    const baseOffset = Math.min(90, Math.max(48, baseDist * 0.2));
+                    const laneOffset = idx * 14;
+                    const curveOffset = baseOffset + laneOffset;
+
+                    // Always re-space imported reverse edges to avoid overlap.
+                    edge.cpX = pairMidX + pairNx * curveOffset * sign;
+                    edge.cpY = pairMidY + pairNy * curveOffset * sign;
+                });
+            });
+        });
+    }
+
     function importJSON(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1076,6 +1165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appState.edges = data.edges;
                 appState.nodeCounter = data.nodeCounter ?? (data.nodes.length);
                 appState.edgeCounter = data.edgeCounter ?? (data.edges.length);
+                normalizeImportedBidirectionalEdges();
                 deselectAll();
                 updateRender();
                 document.getElementById('status-message').textContent = 'Automaton imported successfully.';

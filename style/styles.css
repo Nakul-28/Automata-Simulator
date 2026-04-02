@@ -1188,6 +1188,18 @@ html[data-theme="dark"] .icon-btn:hover {
     background: #e8e8e8;
 }
 
+html[data-theme="dark"] .modal-close {
+    background: #111111;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .modal-close:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--text-primary);
+    background: #1a1a1a;
+}
+
 .table-container {
     overflow: auto;
     padding: 20px 22px;
@@ -1226,6 +1238,15 @@ html[data-theme="dark"] .icon-btn:hover {
     color: var(--text-primary);
 }
 
+html[data-theme="dark"] .transition-table th {
+    background: #141414;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+html[data-theme="dark"] .transition-table td {
+    background: #090909;
+}
+
 .transition-table td.state-header {
     color: var(--text-secondary);
     font-weight: 600;
@@ -1245,6 +1266,15 @@ html[data-theme="dark"] .icon-btn:hover {
     text-decoration-color: rgba(0, 0, 0, 0.4);
 }
 
+html[data-theme="dark"] .transition-table td.state-header {
+    background: #121212;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+html[data-theme="dark"] .transition-table td.state-header.accept-state {
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+}
+
 .transition-table td.empty-cell {
     color: var(--text-secondary);
     opacity: 0.4;
@@ -1252,6 +1282,10 @@ html[data-theme="dark"] .icon-btn:hover {
 
 .transition-table tbody tr:hover td {
     background: rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="dark"] .transition-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .table-empty-msg {
