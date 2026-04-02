@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dragNodeId: null,
         dragOffsetX: 0,
         dragOffsetY: 0,
+        dragEdgeId: null,
+        dragEdgeOffsetX: 0,
+        dragEdgeOffsetY: 0,
 
         isDrawingEdge: false,
         tempEdgeSourceId: null,
@@ -206,6 +209,22 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRender();
     }
 
+    function ensureEdgeControlPoint(edge) {
+        const sourceInfo = appState.nodes.find(n => n.id === edge.from);
+        const targetInfo = appState.nodes.find(n => n.id === edge.to);
+        if (!sourceInfo || !targetInfo) return;
+
+        if (edge.cpX == null || edge.cpY == null) {
+            if (edge.from === edge.to) {
+                edge.cpX = sourceInfo.x;
+                edge.cpY = sourceInfo.y - 90;
+            } else {
+                edge.cpX = (sourceInfo.x + targetInfo.x) / 2;
+                edge.cpY = (sourceInfo.y + targetInfo.y) / 2;
+            }
+        }
+    }
+
     // Canvas Events — account for pan and zoom so node positions are in world space
     const getMouseCoords = (e) => {
         const rect = canvas.getBoundingClientRect();
@@ -260,6 +279,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (edgeGroup && currentMode === 'select') {
                 const edgeId = edgeGroup.getAttribute('data-id');
                 selectEdge(edgeId);
+
+                if (e.button === 0) {
+                    const edge = appState.edges.find(ed => ed.id === edgeId);
+                    if (edge) {
+                        saveSnapshot();
+                        ensureEdgeControlPoint(edge);
+                        appState.dragEdgeId = edgeId;
+                        appState.dragEdgeOffsetX = x - edge.cpX;
+                        appState.dragEdgeOffsetY = y - edge.cpY;
+                        updateRender();
+                    }
+                }
                 return;
             } else if (currentMode === 'select' && !nodeGroup && !edgeGroup) {
                 // Empty canvas click in select mode → start panning
@@ -310,6 +341,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 node.y = y - appState.dragOffsetY;
                 updateRender();
             }
+        } else if (appState.dragEdgeId && currentMode === 'select') {
+            const edge = appState.edges.find(ed => ed.id === appState.dragEdgeId);
+            if (edge) {
+                edge.cpX = x - appState.dragEdgeOffsetX;
+                edge.cpY = y - appState.dragEdgeOffsetY;
+                updateRender();
+            }
         } else if (appState.isDrawingEdge) {
             appState.drawingPoints.push({ x, y });
             updateRender();
@@ -325,6 +363,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (appState.dragNodeId) {
             appState.dragNodeId = null;
+        }
+
+        if (appState.dragEdgeId) {
+            appState.dragEdgeId = null;
         }
 
         if (appState.isDrawingEdge) {
@@ -365,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle mouse leaving canvas
     canvas.addEventListener('mouseleave', () => {
         appState.dragNodeId = null;
+        appState.dragEdgeId = null;
         if (isPanning) {
             isPanning = false;
             canvas.style.cursor = 'default';
@@ -450,6 +493,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    function getQuadraticLabelPosition(startX, startY, cpX, cpY, endX, endY) {
+        // Midpoint on quadratic Bezier (t = 0.5)
+        const baseX = 0.25 * startX + 0.5 * cpX + 0.25 * endX;
+        const baseY = 0.25 * startY + 0.5 * cpY + 0.25 * endY;
+
+        // Use curve side relative to the start-end chord to keep label outside the arc.
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        const sideCross = dx * (cpY - midY) - dy * (cpX - midX);
+        const side = sideCross >= 0 ? 1 : -1;
+        const offset = 12;
+
+        return {
+            x: baseX + nx * side * offset,
+            y: baseY + ny * side * offset
+        };
+    }
+
     // --- Rendering Math & Logic ---
     function updateRender() {
         // Clear all
@@ -491,14 +557,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const y = sourceInfo.y;
                 const r = STATE_RADIUS;
                 const loopRadius = 30;
+                const apexX = edge.cpX != null ? edge.cpX : x;
+                const apexY = edge.cpY != null ? edge.cpY : (y - loopRadius * 3);
                 const x1 = x - r * 0.5;
                 const y1 = y - r * 0.866;
                 const x2 = x + r * 0.5;
                 const y2 = y - r * 0.866;
 
-                path.setAttribute('d', `M ${x1} ${y1} C ${x - loopRadius * 1.5} ${y - loopRadius * 3}, ${x + loopRadius * 1.5} ${y - loopRadius * 3}, ${x2} ${y2}`);
-                textX = x;
-                textY = y - loopRadius * 3.3;
+                path.setAttribute('d', `M ${x1} ${y1} C ${apexX - 24} ${apexY}, ${apexX + 24} ${apexY}, ${x2} ${y2}`);
+                textX = apexX;
+                textY = apexY - 8;
             } else {
                 const dx = targetInfo.x - sourceInfo.x;
                 const dy = targetInfo.y - sourceInfo.y;
@@ -519,11 +587,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const endY = targetInfo.y + Math.sin(aCPtgt) * STATE_RADIUS;
 
                         path.setAttribute('d', `M ${startX} ${startY} Q ${edge.cpX} ${edge.cpY} ${endX} ${endY}`);
-                        // Place label near control point
-                        const labelX = (startX + 2 * edge.cpX + endX) / 4;
-                        const labelY = (startY + 2 * edge.cpY + endY) / 4 - 10;
-                        textX = labelX;
-                        textY = labelY;
+                        const labelPos = getQuadraticLabelPosition(startX, startY, edge.cpX, edge.cpY, endX, endY);
+                        textX = labelPos.x;
+                        textY = labelPos.y;
                     } else {
                         // Default: straight line (or auto-curve for bidirectional)
                         const isBiDir = biDirPairs.has(pairKey(edge.from, edge.to));
@@ -542,8 +608,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const endX = targetInfo.x - Math.cos(angle - angOff) * STATE_RADIUS;
                             const endY = targetInfo.y - Math.sin(angle - angOff) * STATE_RADIUS;
                             path.setAttribute('d', `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`);
-                            textX = cpX + nx * 14 * curveSign;
-                            textY = cpY + ny * 14 * curveSign;
+                            const labelPos = getQuadraticLabelPosition(startX, startY, cpX, cpY, endX, endY);
+                            textX = labelPos.x;
+                            textY = labelPos.y;
                         } else {
                             const startX = sourceInfo.x + Math.cos(angle) * STATE_RADIUS;
                             const startY = sourceInfo.y + Math.sin(angle) * STATE_RADIUS;
