@@ -16,8 +16,14 @@ Deployment Links:
 
 - **DFA (Deterministic Finite Automaton)**: Single-path execution with duplicate transition detection
 - **NFA (Non-Deterministic Finite Automaton)**: Multi-path simultaneous execution with epsilon (ε) closure
-- **Interactive Canvas**: Freehand transition drawing, pan/zoom navigation, drag-and-drop state positioning
+- **Interactive Canvas**: Freehand transition drawing, pan/zoom navigation, drag-and-drop state positioning, and draggable transition curves
 - **Step-by-Step Simulation**: Visual execution with adjustable playback speed
+- **Undo / Redo**: Keyboard shortcuts and toolbar controls for editing history
+- **Transition Table Editor**: Edit automata via table view and apply changes to diagram
+- **JSON Export / Import**: Download automata and load them back from JSON files
+- **Post-Import JSON Editor**: After import, an editable JSON modal opens so you can tweak and re-apply instantly
+- **Import Apply Feedback**: A success message is shown when JSON edits are applied
+- **Mobile Touch Support**: Touch interactions with drag, pan, and pinch-zoom support
 - **Technical Blueprint Design**: Teal-accented (#00ffd5) cyberpunk aesthetic with grid backgrounds and glow effects
 
 ## Tech Stack
@@ -39,7 +45,8 @@ Deployment Links:
 │   └── nfa.js          # NFA core logic with ε-closure
 ├── style/
 │   └── styles.css      # Global stylesheet with blueprint theme
-├── frontend-design.md  # Design guidelines and constraints
+├── test-dfa-example1.json  # Sample DFA import file (example 1)
+├── test-nfa-example1.json  # Sample NFA import file (example 1)
 └── README.md           # This file
 ```
 
@@ -87,11 +94,25 @@ Similar to DFA with additional capabilities:
 - **State Set Tracking**: All active states displayed during simulation
 - **Epsilon Closure**: Automatically computed at each step
 
+### Import, Edit, and Re-Apply JSON (DFA + NFA)
+
+1. Click **Import JSON**
+2. Choose your `.json` file
+3. After import succeeds, the **Imported JSON Editor** modal opens with the loaded content
+4. Edit JSON directly in the editor
+5. Click **Apply JSON** to update the diagram and simulation state
+6. A success message confirms the apply operation
+
+Sample import files included in this repository:
+- `test-dfa-example1.json` with sample DFA input string: `1101`
+- `test-nfa-example1.json` with sample NFA input string: `aaab`
+
 ### Canvas Controls
 
 - **Pan**: Click and drag on empty canvas (or middle mouse button)
 - **Zoom**: Mouse wheel (limits: 0.2x - 5x)
 - **Move State**: Select tool + drag state node
+- **Adjust Transition Curvature**: Select tool + drag a transition to move its control point
 - **Select Element**: Select tool + click state/transition to view properties
 - **Delete**: Select element → "Delete State" or "Delete Transition" button
 
@@ -103,12 +124,15 @@ Similar to DFA with additional capabilities:
 - **UI State**: Tool selection, drag interactions, context menus
 - **Simulation Engine**: Single-state tracking, symbol consumption, accept/reject logic
 - **Validation**: Duplicate transition detection for determinism
+- **Import/Export Workflow**: File import, normalization, and post-import JSON editor apply flow
 
 ### NFA Logic (`scripts/nfa.js`)
 - **Epsilon Closure**: Recursive traversal of ε-transitions
 - **Multi-State Tracking**: Set-based active state management
 - **Non-Determinism**: Parallel path exploration
 - **Simulation Engine**: State set propagation, acceptance via subset containing accept state
+- **Transition Curve Editing**: Control-point dragging support for transition path adjustment
+- **Import/Export Workflow**: File import, normalization, and post-import JSON editor apply flow
 
 ### Rendering Pipeline
 1. Clear SVG groups (edges, nodes)
@@ -121,8 +145,8 @@ Similar to DFA with additional capabilities:
 ## Known Behaviors
 
 - **Freehand Drawing**: Control points stored from midpoint of drawn path
-- **Self-Loops**: Automatic curved path above state with label offset
-- **Zoom Anchoring**: Zoom centers on canvas origin (not mouse position)
+- **Self-Loops**: Curved path can be reshaped via draggable transition control point
+- **Zoom Anchoring**: Zoom is centered on cursor position
 - **State Overlap**: No collision detection; states can overlap
 - **DFA Warnings**: Non-blocking; simulation still runs with violations
 
