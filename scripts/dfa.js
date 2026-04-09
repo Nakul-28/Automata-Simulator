@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const symbols = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
                 const hasEpsilon = symbols.some(s => s === 'ε' || s === 'epsilon');
                 if (hasEpsilon) {
-                    warningEl.textContent = '⛔ DFA does not allow ε (epsilon) transitions. Use NFA for that.';
+                    warningEl.textContent = '[!] DFA does not allow ε (epsilon) transitions. Use NFA for that.';
                     warningEl.style.display = 'block';
                     edge.symbols = symbols.filter(s => s !== 'ε' && s !== 'epsilon') || ['?'];
                     updateRender();
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (conflicts.length > 0) {
-                    warningEl.textContent = `⚠️ DFA violation! Transition(s) already exist: ${conflicts.join(', ')}. Delete the existing transition or change the symbol.`;
+                    warningEl.textContent = `[!] DFA violation! Transition(s) already exist: ${conflicts.join(', ')}. Delete the existing transition or change the symbol.`;
                     warningEl.style.display = 'block';
                     // Still allow the edit but warn — user can fix it
                 } else {
@@ -936,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.sim.tape = buildInputTape(uiControls.input.value);
         appState.sim.head = 0;
         appState.sim.status = 'idle';
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
 
         // Render tape
         uiControls.tapeContainer.innerHTML = '';
@@ -1079,14 +1079,14 @@ document.addEventListener('DOMContentLoaded', () => {
             uiControls.resultBadge.textContent = 'Rejected';
             pushLiveLog(`Result: rejected at ${formatStateSet(appState.sim.activeStates)}`);
         }
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
     }
 
     function autoReject() {
         appState.sim.status = 'rejected';
         uiControls.resultBadge.className = 'result-badge rejected';
         uiControls.resultBadge.textContent = 'Rejected - Stuck';
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
         pushLiveLog('Result: rejected because no active state can consume the next symbol.');
     }
 
@@ -1100,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Pause
             clearTimeout(appState.sim.intervalId);
             appState.sim.status = 'idle';
-            uiControls.btnPlay.textContent = '▶️ Play';
+            uiControls.btnPlay.textContent = '▶ Play';
             pushLiveLog('Playback paused.', true);
         } else {
             // Play
@@ -1119,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             appState.sim.status = 'playing';
-            uiControls.btnPlay.textContent = '⏸️ Pause';
+            uiControls.btnPlay.textContent = '|| Pause';
             pushLiveLog('Playback started.', true);
 
             const playStep = () => {

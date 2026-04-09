@@ -2,8 +2,8 @@
 // Manages light/dark theme toggling with localStorage persistence
 
 const THEME_STORAGE_KEY = 'automata-theme';
-const LIGHT_EMOJI = '🌙';
-const DARK_EMOJI = '☀️';
+const LIGHT_EMOJI = '◐';
+const DARK_EMOJI = '◑';
 
 // Initialize theme on page load
 function initTheme() {

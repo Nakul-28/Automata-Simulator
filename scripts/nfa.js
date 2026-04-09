@@ -826,7 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.sim.tape = inputStr.split('');
         appState.sim.head = 0;
         appState.sim.status = 'idle';
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
 
         // Render tape
         uiControls.tapeContainer.innerHTML = '';
@@ -969,14 +969,14 @@ document.addEventListener('DOMContentLoaded', () => {
             uiControls.resultBadge.textContent = 'Rejected';
             pushLiveLog(`Result: rejected at ${formatStateSet(appState.sim.activeStates)}`);
         }
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
     }
 
     function autoReject() {
         appState.sim.status = 'rejected';
         uiControls.resultBadge.className = 'result-badge rejected';
         uiControls.resultBadge.textContent = 'Rejected - No Active States';
-        uiControls.btnPlay.textContent = '▶️ Play';
+        uiControls.btnPlay.textContent = '▶ Play';
         pushLiveLog('Result: rejected because there are no active states.');
     }
 
@@ -989,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (appState.sim.status === 'playing') {
             clearTimeout(appState.sim.intervalId);
             appState.sim.status = 'idle';
-            uiControls.btnPlay.textContent = '▶️ Play';
+            uiControls.btnPlay.textContent = '▶ Play';
             pushLiveLog('Playback paused.', true);
         } else {
             if (appState.sim.status === 'idle') {
@@ -1001,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             appState.sim.status = 'playing';
-            uiControls.btnPlay.textContent = '⏸️ Pause';
+            uiControls.btnPlay.textContent = '|| Pause';
             pushLiveLog('Playback started.', true);
 
             const playStep = () => {

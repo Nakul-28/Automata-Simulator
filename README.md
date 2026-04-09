@@ -80,9 +80,9 @@ Then navigate to `http://localhost:8000/pages/index.html`
 4. **Label Transitions**: Click transition → Enter symbols (comma-separated: `a, b, 0, 1`)
 5. **Simulate**: 
    - Enter input string (e.g., `1011`)
-   - Use **Reset** (⏮️) to initialize
-   - Use **Step** (⏭️) to advance one symbol
-   - Use **Play** (▶️) to auto-run simulation
+   - Use **Reset** (`|<`) to initialize
+   - Use **Step** (`>|`) to advance one symbol
+   - Use **Play** (`▶`) to auto-run simulation
 6. **DFA Validation**: Warnings appear for duplicate transitions from same state, and use of  `ε` or `epsilon` in the transition symbols.
 
 ### NFA Simulator (`pages/nfa.html`)

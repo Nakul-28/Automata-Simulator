@@ -16,7 +16,7 @@
 <body>
     <!-- Theme Toggle Button -->
     <button id="theme-toggle" class="theme-toggle" title="Toggle dark/light theme" aria-label="Toggle theme">
-        🌙
+        ◐
     </button>
 
     <div class="app-container">
@@ -57,13 +57,13 @@
             <h2>DFA Tools</h2>
             <div class="tool-group">
                 <button id="tool-select" class="tool-btn active" title="Select and Move">
-                    <span class="icon">👆</span> Select
+                    <span class="icon">▸</span> Select
                 </button>
                 <button id="tool-state" class="tool-btn" title="Add State">
-                    <span class="icon">⚪</span> Add State
+                    <span class="icon">○</span> Add State
                 </button>
                 <button id="tool-transition" class="tool-btn" title="Add Transition">
-                    <span class="icon">↗️</span> Add Transition
+                    <span class="icon">→</span> Add Transition
                 </button>
             </div>
 
@@ -94,13 +94,13 @@
                     <button id="btn-redo" class="icon-btn" title="Redo (Ctrl+Y)">↪ Redo</button>
                 </div>
                 <button id="btn-show-table" class="tool-btn" title="Show Transition Table">
-                    <span class="icon">📊</span> Transition Table
+                    <span class="icon">≡</span> Transition Table
                 </button>
                 <button id="btn-export" class="tool-btn" title="Export as JSON">
-                    <span class="icon">⬇️</span> Export JSON
+                    <span class="icon">↓</span> Export JSON
                 </button>
                 <button id="btn-import" class="tool-btn" title="Import from JSON">
-                    <span class="icon">⬆️</span> Import JSON
+                    <span class="icon">↑</span> Import JSON
                 </button>
                 <input type="file" id="import-file-input" accept=".json" style="display:none;">
             </div>
@@ -139,9 +139,9 @@
                 </div>
 
                 <div class="playback-controls">
-                    <button id="btn-reset" class="sim-btn" title="Reset Simulation">⏮️ Reset</button>
-                    <button id="btn-step" class="sim-btn" title="Step Forward">⏭️ Step</button>
-                    <button id="btn-play" class="sim-btn primary" title="Play Simulation">▶️ Play</button>
+                    <button id="btn-reset" class="sim-btn" title="Reset Simulation">|&lt; Reset</button>
+                    <button id="btn-step" class="sim-btn" title="Step Forward">&gt;| Step</button>
+                    <button id="btn-play" class="sim-btn primary" title="Play Simulation">▶ Play</button>
                 </div>
 
                 <div class="sim-speed">
@@ -186,7 +186,7 @@
     }</pre>
             <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
                 <button id="btn-import-file-pick" class="tool-btn" style="width:auto;padding:8px 18px;">
-                    <span class="icon">⬆️</span> Choose File &amp; Import
+                    <span class="icon">↑</span> Choose File &amp; Import
                 </button>
             </div>
         </div>
@@ -203,7 +203,7 @@
             <textarea id="json-editor-input" class="json-editor-area" spellcheck="false"></textarea>
             <div class="json-editor-actions">
                 <button id="btn-json-editor-apply" class="tool-btn" style="width:auto;padding:8px 18px;">
-                    <span class="icon">✅</span> Apply JSON
+                    <span class="icon">▶</span> Apply JSON
                 </button>
             </div>
         </div>
