@@ -992,6 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const symbol = appState.sim.tape[appState.sim.head];
+    const activeBeforeStep = [...appState.sim.activeStates];
 
         // calculate next states
         let nextStates = new Set();
@@ -1033,10 +1034,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (takenTransitions.length === 0) {
-            pushLiveLog(`Step ${appState.sim.head}: ${formatStateSet(appState.sim.activeStates)} on '${symbol}' -> no transition`);
+            const fromLabel = activeBeforeStep.length ? getStateLabel(activeBeforeStep[0]) : '∅';
+            pushLiveLog(`Step ${appState.sim.head}: δ(${fromLabel}, ${symbol}) = ∅`);
         } else {
             const detail = takenTransitions
-                .map(t => `${getStateLabel(t.from)} --${symbol}--> ${getStateLabel(t.to)}`)
+                .map(t => `δ(${getStateLabel(t.from)}, ${symbol}) = ${getStateLabel(t.to)}`)
                 .join(' | ');
             pushLiveLog(`Step ${appState.sim.head}: ${detail}`);
             pushLiveLog(`Active after step: ${formatStateSet(appState.sim.activeStates)}`, true);

@@ -890,6 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const symbol = appState.sim.tape[appState.sim.head];
+    const activeBeforeStep = [...appState.sim.activeStates];
 
         // NFA: explore ALL possible transitions from ALL active states
         let nextStates = new Set();
@@ -932,10 +933,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (takenTransitions.length === 0) {
-            pushLiveLog(`Step ${appState.sim.head}: ${formatStateSet(appState.sim.activeStates)} on '${symbol}' -> no transition`);
+            const detail = activeBeforeStep.length
+                ? activeBeforeStep.map(stateId => `δ(${getStateLabel(stateId)}, ${symbol}) = ∅`).join(' | ')
+                : `δ(∅, ${symbol}) = ∅`;
+            pushLiveLog(`Step ${appState.sim.head}: ${detail}`);
         } else {
-            const detail = takenTransitions
-                .map(t => `${getStateLabel(t.from)} --${symbol}--> ${getStateLabel(t.to)}`)
+            const transitionsByFrom = new Map();
+            takenTransitions.forEach(t => {
+                const fromLabel = getStateLabel(t.from);
+                const toLabel = getStateLabel(t.to);
+                if (!transitionsByFrom.has(fromLabel)) transitionsByFrom.set(fromLabel, new Set());
+                transitionsByFrom.get(fromLabel).add(toLabel);
+            });
+            const detail = Array.from(transitionsByFrom.entries())
+                .map(([fromLabel, toSet]) => `δ(${fromLabel}, ${symbol}) = {${Array.from(toSet).join(', ')}}`)
                 .join(' | ');
             pushLiveLog(`Step ${appState.sim.head}: ${detail}`);
             pushLiveLog(`Active after ε-closure: ${formatStateSet(appState.sim.activeStates)}`, true);
