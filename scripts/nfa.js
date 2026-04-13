@@ -634,6 +634,8 @@ document.addEventListener('DOMContentLoaded', () => {
         activeStates: [],
         tape: [],
         head: 0,
+        history: [],
+        activeEdgeIds: [],
         status: 'idle',
         intervalId: null
     };
@@ -641,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uiControls = {
         input: document.getElementById('sim-input'),
         btnReset: document.getElementById('btn-reset'),
+        btnStepBack: document.getElementById('btn-step-back'),
         btnStep: document.getElementById('btn-step'),
         btnPlay: document.getElementById('btn-play'),
         speedSlider: document.getElementById('speed-slider'),
@@ -648,6 +651,61 @@ document.addEventListener('DOMContentLoaded', () => {
         resultBadge: document.getElementById('sim-result'),
         liveLog: document.getElementById('sim-live-log')
     };
+
+    function setActiveTransitionHighlights(edgeIds) {
+        document.querySelectorAll('g.transition.active-edge-sim').forEach(el => el.classList.remove('active-edge-sim'));
+        edgeIds.forEach(eId => {
+            const g = document.querySelector(`g.transition[data-id="${eId}"]`);
+            if (g) g.classList.add('active-edge-sim');
+        });
+        appState.sim.activeEdgeIds = [...edgeIds];
+    }
+
+    function updateTapeVisualState() {
+        const cells = uiControls.tapeContainer.children;
+        Array.from(cells).forEach((cell, idx) => {
+            cell.classList.remove('active', 'consumed');
+            if (idx < appState.sim.head) {
+                cell.classList.add('consumed');
+            } else if (idx === appState.sim.head) {
+                cell.classList.add('active');
+            }
+        });
+    }
+
+    function pushSimSnapshot() {
+        appState.sim.history.push({
+            activeStates: [...appState.sim.activeStates],
+            head: appState.sim.head,
+            status: appState.sim.status,
+            activeEdgeIds: [...appState.sim.activeEdgeIds],
+            resultClassName: uiControls.resultBadge.className,
+            resultText: uiControls.resultBadge.textContent
+        });
+        if (appState.sim.history.length > 500) {
+            appState.sim.history.shift();
+        }
+    }
+
+    function stepBackSim() {
+        if (!appState.sim.history.length) return false;
+
+        clearTimeout(appState.sim.intervalId);
+        const previous = appState.sim.history.pop();
+        appState.sim.activeStates = [...previous.activeStates];
+        appState.sim.head = previous.head;
+        appState.sim.status = previous.status === 'playing' ? 'idle' : previous.status;
+        uiControls.btnPlay.textContent = '▶ Play';
+        uiControls.resultBadge.className = previous.resultClassName;
+        uiControls.resultBadge.textContent = previous.resultText;
+
+        updateTapeVisualState();
+        updateActiveStatesDisplay();
+        updateRender();
+        setActiveTransitionHighlights(previous.activeEdgeIds || []);
+        pushLiveLog(`Stepped backward to input index ${appState.sim.head}.`, true);
+        return true;
+    }
 
     function initDraggableLivePanel() {
         const panel = document.getElementById('sim-live-panel');
@@ -825,6 +883,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputStr = uiControls.input.value.trim();
         appState.sim.tape = inputStr.split('');
         appState.sim.head = 0;
+        appState.sim.history = [];
+        appState.sim.activeEdgeIds = [];
         appState.sim.status = 'idle';
         uiControls.btnPlay.textContent = '▶ Play';
 
@@ -859,10 +919,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update status with active state count
         updateActiveStatesDisplay();
         updateRender();
-        document.querySelectorAll('g.transition.active-edge-sim').forEach(el => el.classList.remove('active-edge-sim'));
-
-        const cells = uiControls.tapeContainer.children;
-        if (cells[0]) cells[0].classList.add('active');
+        setActiveTransitionHighlights([]);
+        updateTapeVisualState();
     }
 
     function updateActiveStatesDisplay() {
@@ -889,6 +947,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
+        pushSimSnapshot();
+
         const symbol = appState.sim.tape[appState.sim.head];
     const activeBeforeStep = [...appState.sim.activeStates];
 
@@ -910,27 +970,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Apply epsilon closure to the result
         appState.sim.activeStates = getEpsilonClosure(Array.from(nextStates));
 
-        // Clear previously highlighted edges
-        document.querySelectorAll('g.transition.active-edge-sim').forEach(el => el.classList.remove('active-edge-sim'));
-
-        // Mark transitioned edges as active
-        usedTransitions.forEach(eId => {
-            const g = document.querySelector(`g.transition[data-id="${eId}"]`);
-            if (g) g.classList.add('active-edge-sim');
-        });
-
-        // update tape UI
-        const cells = uiControls.tapeContainer.children;
-        if (cells[appState.sim.head]) {
-            cells[appState.sim.head].classList.remove('active');
-            cells[appState.sim.head].classList.add('consumed');
-        }
+        setActiveTransitionHighlights(Array.from(usedTransitions));
 
         appState.sim.head++;
-
-        if (cells[appState.sim.head]) {
-            cells[appState.sim.head].classList.add('active');
-        }
+        updateTapeVisualState();
 
         if (takenTransitions.length === 0) {
             const detail = activeBeforeStep.length
@@ -992,6 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     uiControls.btnReset.addEventListener('click', resetSim);
+    uiControls.btnStepBack.addEventListener('click', () => { stepBackSim(); });
     uiControls.btnStep.addEventListener('click', () => { stepSim(); });
 
     uiControls.input.addEventListener('input', resetSim);
@@ -1027,10 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            const cells = uiControls.tapeContainer.children;
-            if (cells[appState.sim.head]) {
-                cells[appState.sim.head].classList.add('active');
-            }
+            updateTapeVisualState();
 
             const initialSpeed = 2100 - parseInt(uiControls.speedSlider.value);
             appState.sim.intervalId = setTimeout(playStep, initialSpeed);
