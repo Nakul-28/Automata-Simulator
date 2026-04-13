@@ -1634,14 +1634,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-close-modal').addEventListener('click', () => {
         document.getElementById('table-modal').style.display = 'none';
     });
+    document.getElementById('btn-info').addEventListener('click', () => {
+        document.getElementById('info-modal').style.display = 'flex';
+    });
+    document.getElementById('btn-close-info-modal').addEventListener('click', () => {
+        document.getElementById('info-modal').style.display = 'none';
+    });
     document.getElementById('table-modal').addEventListener('click', (e) => {
         if (e.target === document.getElementById('table-modal')) {
             document.getElementById('table-modal').style.display = 'none';
         }
     });
+    document.getElementById('info-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('info-modal')) {
+            document.getElementById('info-modal').style.display = 'none';
+        }
+    });
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.getElementById('table-modal').style.display = 'none';
+            document.getElementById('info-modal').style.display = 'none';
         }
     });
 

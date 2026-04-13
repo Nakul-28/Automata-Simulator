@@ -8,13 +8,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style/styles.css">
+    <link rel="stylesheet" href="../style/styles.css">
 </head>
 
 <body>
     <!-- Theme Toggle Button -->
     <button id="theme-toggle" class="theme-toggle" title="Toggle dark/light theme" aria-label="Toggle theme">
         ◐
+    </button>
+    <button id="btn-info" class="help-toggle" title="How to use NFA simulator" aria-label="How to use NFA simulator">
+        ?
     </button>
 
     <div class="app-container">
@@ -113,6 +116,48 @@
                     <button id="btn-close-modal" class="modal-close">✕</button>
                 </div>
                 <div id="table-container" class="table-container"></div>
+            </div>
+        </div>
+
+        <!-- Help / Info Modal -->
+        <div id="info-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-panel info-modal-panel">
+                <div class="modal-header">
+                    <h2>NFA Simulator Guide</h2>
+                    <button id="btn-close-info-modal" class="modal-close">✕</button>
+                </div>
+                <div class="table-container info-modal-content">
+                    <h3>1) Build The State Diagram</h3>
+                    <ul>
+                        <li>Choose Add State, then click on the canvas to place states.</li>
+                        <li>Use Select to update state name, start, and accept properties in State Properties.</li>
+                        <li>Choose Add Transition and drag source to target, then enter symbols (comma-separated).</li>
+                        <li>Use ε in Transition Symbol for epsilon transitions.</li>
+                    </ul>
+
+                    <h3>2) Canvas Tools</h3>
+                    <ul>
+                        <li>Select: choose states/transitions and drag to move states or curve control points.</li>
+                        <li>Add State: creates a new state at click location.</li>
+                        <li>Add Transition: creates curved transitions by drag gesture.</li>
+                        <li>Undo/Redo helps recover from mistakes while constructing the automaton.</li>
+                    </ul>
+
+                    <h3>3) Export And Import JSON</h3>
+                    <ul>
+                        <li>Export JSON saves full automaton structure and geometry.</li>
+                        <li>Import JSON validates and loads a diagram from file.</li>
+                        <li>Imported content also opens in the JSON editor where you can update and Apply JSON.</li>
+                    </ul>
+
+                    <h3>4) Transition Table Feature</h3>
+                    <ul>
+                        <li>Rows represent states, columns represent symbols (including ε when used).</li>
+                        <li>Each cell may contain multiple target states separated by commas (example: q1, q2).</li>
+                        <li>Leave a cell blank to delete that transition for the selected symbol.</li>
+                        <li>Add State/Add Symbol creates table structure; Apply To Diagram syncs table data back to canvas.</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
